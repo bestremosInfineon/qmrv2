@@ -1,5 +1,4 @@
 ﻿using Oracle.ManagedDataAccess.Client;
-using QMRv2.DBContext;
 using QMRv2.Models.DTO;
 using QMRv2.Repository.Contexts;
 

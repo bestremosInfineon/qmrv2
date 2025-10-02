@@ -4,8 +4,6 @@ using Oracle.ManagedDataAccess.Client;
 using QMRv2.Models.DAO;
 using QMRv2.Models.DTO;
 using QMRv2.Repository.Contexts;
-using System;
-using System.Collections.Generic;
 using System.Data;
 
 namespace QMRv2.Repository.Contracts

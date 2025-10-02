@@ -3,7 +3,6 @@ using Newtonsoft.Json;
 using QMRv2.Models.DAO;
 using QMRv2.Models.DTO;
 using QMRv2.Repository.Contexts;
-using QMRv2.Repository.Contracts;
 
 namespace QMRv2.Controllers
 {

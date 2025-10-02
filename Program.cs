@@ -1,4 +1,5 @@
 using Microsoft.EntityFrameworkCore;
+using Microsoft.OpenApi.Models;
 using QMRv2.DBContext;
 using QMRv2.Repository.Contexts;
 using QMRv2.Repository.Contracts;
@@ -22,7 +23,16 @@ builder.Configuration.AddJsonFile("appsettings.json");
 builder.Services.AddDbContext<AppDBContext>(options => options.UseOracle(builder.Configuration.GetConnectionString("COIN")));
 
 builder.Services.AddEndpointsApiExplorer();
-builder.Services.AddSwaggerGen();
+builder.Services.AddSwaggerGen(c =>
+{
+    c.SwaggerDoc("v1", new OpenApiInfo
+    {
+        Title = "QMR v2",
+        Version = "v1",
+        Description = "API Description" // Optional
+    });
+});
+
 
 var app = builder.Build();
 
@@ -30,7 +40,11 @@ var app = builder.Build();
 if (app.Environment.IsDevelopment())
 {
     app.UseSwagger();
-    app.UseSwaggerUI();
+    app.UseSwaggerUI(c =>
+    {
+        c.SwaggerEndpoint("/swagger/v1/swagger.json", "Your API v1");
+    });
+
 }
 
 app.UseHttpsRedirection();

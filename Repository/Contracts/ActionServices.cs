@@ -4,7 +4,6 @@ using QMRv2.Models.DTO;
 using QMRv2.Repository.Contexts;
 using System.Data;
 using v2.Repository.Contexts;
-using static System.Runtime.InteropServices.JavaScript.JSType;
 
 namespace QMRv2.Repository.Contracts
 {

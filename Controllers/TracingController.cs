@@ -1,11 +1,8 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using Newtonsoft.Json;
-using QMRv2.Common;
 using QMRv2.Models.DAO;
 using QMRv2.Models.DTO;
 using QMRv2.Repository.Contexts;
-using QMRv2.Repository.Contracts;
-using Swashbuckle.AspNetCore.Annotations;
 
 namespace QMRv2.Controllers
 {

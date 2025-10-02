@@ -1,20 +1,14 @@
-﻿using Ingres.Client;
-using Microsoft.AspNetCore.Http;
-using Microsoft.AspNetCore.Mvc.Abstractions;
-using Microsoft.AspNetCore.Razor.TagHelpers;
-using Newtonsoft.Json;
+﻿using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using QMRv2.Common;
 using QMRv2.Models.DAO;
 using QMRv2.Models.DTO;
 using QMRv2.Models.Enums;
 using QMRv2.Repository.Contexts;
-using System;
 using System.Data;
 using System.Text;
 using System.Text.RegularExpressions;
 using v2.Repository.Contexts;
-using static Microsoft.EntityFrameworkCore.DbLoggerCategory;
 
 namespace QMRv2.Repository.Contracts
 {
