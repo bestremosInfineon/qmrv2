@@ -29,7 +29,7 @@ namespace QMRv2.Repository.Contracts
                         OracleCommand cmd = new OracleCommand
                         {
                             Connection = conn,
-                            CommandText = "PROD.MRB_INSERT_IFX_LOT_RESULT",
+                            CommandText = "PROD.MRB_INSERT_QMRIFX_LOT_RESULT",
                             BindByName = true,
                             CommandType = CommandType.StoredProcedure
                         };
