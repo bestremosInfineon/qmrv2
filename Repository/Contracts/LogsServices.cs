@@ -16,7 +16,7 @@ namespace QMRv2.Repository.Contracts
         public async Task InsertTblDebugger(TblDebugger param)
         {
             var var4 = $"Message : {param.Var4?.Message.Replace("\'", "\"")} StackTrace : {(string.IsNullOrEmpty(param.Var4?.StackTrace) ? string.Empty : param.Var4?.StackTrace.Replace("\'", "\""))}";
-            using (OracleConnection connDebug = new OracleConnection(_configuration["ConnectionStrings:COIN"]))
+            using (OracleConnection connDebug = new OracleConnection(Environment.GetEnvironmentVariable("COIN") ?? _configuration["ConnectionStrings:COIN"]))
             {
                 connDebug.Open();
                 OracleTransaction oracleTransaction = connDebug.BeginTransaction();
@@ -30,7 +30,7 @@ namespace QMRv2.Repository.Contracts
         {
             try
             {
-                using (OracleConnection conn = new OracleConnection(_configuration["ConnectionStrings:COIN"]))
+                using (OracleConnection conn = new OracleConnection(Environment.GetEnvironmentVariable("COIN") ?? _configuration["ConnectionStrings:COIN"]))
                 {
                     conn.Open();
 

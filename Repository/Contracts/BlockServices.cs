@@ -23,6 +23,13 @@ namespace QMRv2.Repository.Contracts
             _actionServices = actionServices;
         }
 
+        public string INGBE => Environment.GetEnvironmentVariable("INGBE") ?? _configuration["ConnectionStrings:INGBE"];
+        public string INGCSPIMIS => Environment.GetEnvironmentVariable("INGCSPIMIS") ?? _configuration["ConnectionStrings:INGCSPIMIS"];
+        public string CSPMARK => Environment.GetEnvironmentVariable("CSPMARK") ?? _configuration["ConnectionStrings:CSPMARK"];
+        public string CSPMFG => Environment.GetEnvironmentVariable("CSPMFG") ?? _configuration["ConnectionStrings:CSPMFG"];
+        public string blockToggle => Environment.GetEnvironmentVariable("BlockingDispoToggle") ?? _configuration["BlockingDispoToggle"];
+        public string coinConnection => Environment.GetEnvironmentVariable("COIN") ?? _configuration["ConnectionStrings:COIN"];
+        
         public async Task<string> InsertBlockRequests(LotRequest query)
         {
             try
@@ -176,8 +183,8 @@ namespace QMRv2.Repository.Contracts
 
         public async Task<bool> ExecuteBlockIngres(IfxBlockResult blockModel)
         {
-            bool toggle = Convert.ToBoolean(_configuration["BlockingDispoToggle"]);
-            var connString = toggle ? _configuration["Ingres1"] : _configuration["Ingres2"];
+            bool toggle = Convert.ToBoolean(blockToggle);
+            var connString = toggle ? INGBE : INGCSPIMIS;
             using (IngresConnection connIngres = new IngresConnection(connString))
             {
                 connIngres.Open();
@@ -190,6 +197,9 @@ namespace QMRv2.Repository.Contracts
                     cmd.ExecuteNonQuery();
                     trans.Commit();
                     connIngres.Close();
+
+                    await ExecuteBlockIngresCspMfg(blockModel);
+                    await ExecuteBlockIngresCspMark(blockModel);
 
                     return false;
                 }
@@ -215,7 +225,7 @@ namespace QMRv2.Repository.Contracts
             List<IfxBlockResult> retListValue = new List<IfxBlockResult>();
             try
             {
-                using (OracleConnection conn = new OracleConnection(_configuration["ConnectionStrings:COIN"]))
+                using (OracleConnection conn = new OracleConnection(coinConnection))
                 {
                     conn.Open();
                     OracleCommand command = new OracleCommand($"SELECT TRANSFER_ID, QMRCASENO, LOT_NO, CASE_MANAGER, BLOCKING_REASON FROM MRB_QMIFX_LOT_BLOCK_REQUESTS WHERE IS_BLOCKED = '0' ORDER BY EVENT_TIMESTAMP DESC ", conn);
@@ -282,6 +292,74 @@ namespace QMRv2.Repository.Contracts
                 };
                 await _logsServices.InsertTblDebugger(debug);
                 return await Task.FromResult(false);
+            }
+        }
+
+        public async Task ExecuteBlockIngresCspMark(IfxBlockResult blockModel)
+        {
+            var toggle = Convert.ToBoolean(blockToggle);
+            var connString = toggle ? CSPMARK : INGBE;
+            using (IngresConnection connIngres = new IngresConnection(connString))
+            {
+                connIngres.Open();
+                IngresTransaction trans = connIngres.BeginTransaction(IsolationLevel.ReadCommitted);
+                try
+                {
+                    ////setMRBHoldInWip(pMRBcaseno VARCHAR(20), pLot INTEGER, pSplit VARCHAR(5), pOriginator VARCHAR(30), pOwner VARCHAR(30), pComment VARCHAR(200), pDatechanged VARCHAR(20))
+                    string query = $"EXECUTE PROCEDURE setMRBHoldInWip ('{blockModel.CaseNumber}', {blockModel.LotNumber}, '{blockModel.Split}', '{blockModel.CaseManager}', '{blockModel.CaseManager}', '{blockModel.BlockingReason}', '{DateTime.Now.AddHours(-8).ToString("dd-MMM-yy HH:mm:ss").ToUpper()}')";
+                    IngresCommand cmd = new IngresCommand(query, connIngres);
+                    cmd.Transaction = trans;
+                    cmd.ExecuteNonQuery();
+                    trans.Commit();
+                    connIngres.Close();
+                }
+                catch (Exception err)
+                {
+                    var debug = new TblDebugger
+                    {
+                        Var1 = "BlockService_006",
+                        Var2 = $"TRANSFERID #{blockModel.TransferID} CASE #{blockModel.CaseNumber} LOT #{blockModel.LotNumber}",
+                        Var4 = err
+                    };
+                    await _logsServices.InsertTblDebugger(debug);
+
+                    trans.Rollback();
+                    connIngres.Close();
+                }
+            }
+        }
+
+        public async Task ExecuteBlockIngresCspMfg(IfxBlockResult blockModel)
+        {
+            var toggle = Convert.ToBoolean(blockToggle);
+            var connString = toggle ? CSPMFG : INGBE;
+            using (IngresConnection connIngres = new IngresConnection(connString))
+            {
+                connIngres.Open();
+                IngresTransaction trans = connIngres.BeginTransaction(IsolationLevel.ReadCommitted);
+                try
+                {
+                    ////setMRBHoldInWip(pMRBcaseno VARCHAR(20), pLot INTEGER, pSplit VARCHAR(5), pOriginator VARCHAR(30), pOwner VARCHAR(30), pComment VARCHAR(200), pDatechanged VARCHAR(20))
+                    string query = $"EXECUTE PROCEDURE setMRBHoldInWip ('{blockModel.CaseNumber}', {blockModel.LotNumber}, '{blockModel.Split}', '{blockModel.CaseManager}', '{blockModel.CaseManager}', '{blockModel.BlockingReason}', '{DateTime.Now.AddHours(-8).ToString("dd-MMM-yy HH:mm:ss").ToUpper()}')";
+                    IngresCommand cmd = new IngresCommand(query, connIngres);
+                    cmd.Transaction = trans;
+                    cmd.ExecuteNonQuery();
+                    trans.Commit();
+                    connIngres.Close();
+                }
+                catch (Exception err)
+                {
+                    var debug = new TblDebugger
+                    {
+                        Var1 = "BlockService_007",
+                        Var2 = $"TRANSFERID #{blockModel.TransferID} CASE #{blockModel.CaseNumber} LOT #{blockModel.LotNumber}",
+                        Var4 = err
+                    };
+                    await _logsServices.InsertTblDebugger(debug);
+
+                    trans.Rollback();
+                    connIngres.Close();
+                }
             }
         }
     }

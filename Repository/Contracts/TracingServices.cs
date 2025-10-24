@@ -32,7 +32,7 @@ namespace QMRv2.Repository.Contracts
         public string transferIdList = string.Empty;
         public string caseNumberList = string.Empty;
         public string lotNumberList = string.Empty;
-
+        
         public async Task<LotRequest> InsertRequests(LotRequest query)
         {
             try
@@ -481,7 +481,7 @@ namespace QMRv2.Repository.Contracts
                 JObject innerObject = (JObject)jObject["lotResults"];
                 string transformedJson = innerObject.ToString();
 
-                var apiEndpoint = _configuration["IfxUrls:WS_QMRUpdateLot"];
+                var apiEndpoint = Environment.GetEnvironmentVariable("WS_QMRUpdateLot") ?? _configuration["IfxUrls:WS_QMRUpdateLot"];
                 var content = new StringContent(transformedJson, Encoding.UTF8, "application/json");
                 var lotNumber = childDetails.Select(q => q.LotTraceOrigin).Distinct().FirstOrDefault();
 

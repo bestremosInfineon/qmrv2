@@ -13,5 +13,8 @@
         public string? Split { get; set; }
         public string? BlockDate { get; set; }
         public string? Disposition { get; set; }
+        public string DispositionMap { get; set; }
+        public string SPName { get; set; }
+        public bool Toggle { get; set; }
     }
 }

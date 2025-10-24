@@ -17,6 +17,9 @@ namespace QMRv2.Repository.Contracts
             _configuration = configuration;
             _logsServices = logsServices;
         }
+        public string coinConnection => Environment.GetEnvironmentVariable("COIN") ?? _configuration["ConnectionStrings:COIN"];
+        public string appEnvironment => Environment.GetEnvironmentVariable("AppEnvironment") ?? _configuration["AppEnvironment"];
+
 
         public async Task<string> GetIngresPL(SearchCoinModel model, string device)
         {
@@ -25,7 +28,7 @@ namespace QMRv2.Repository.Contracts
             {
                 await Task.Run(() =>
                 {
-                    using (OracleConnection conn = new OracleConnection(_configuration["ConnectionStrings:COIN"]))
+                    using (OracleConnection conn = new OracleConnection(coinConnection))
                     {
                         conn.Open();
 
@@ -63,7 +66,7 @@ namespace QMRv2.Repository.Contracts
             {
                 await Task.Run(() =>
                 {
-                    using (OracleConnection conn = new OracleConnection(_configuration["ConnectionStrings:COIN"]))
+                    using (OracleConnection conn = new OracleConnection(coinConnection))
                     {
                         conn.Open();
 
@@ -101,7 +104,7 @@ namespace QMRv2.Repository.Contracts
             {
                 await Task.Run(() =>
                 {
-                    using (OracleConnection conn = new OracleConnection(_configuration["ConnectionStrings:COIN"]))
+                    using (OracleConnection conn = new OracleConnection(coinConnection))
                     {
                         conn.Open();
 
@@ -139,8 +142,8 @@ namespace QMRv2.Repository.Contracts
 
             string allrelatedlots = "'";
 
-            string? sourceDb = _configuration["AppEnvironment"] == "1" ? "MV_MRB_HIST_PARENT_CHILD_LOTS@SAPHINV" : "MV_MRB_HIST_PARENT_CHILD_LOTS@SAPHINVD_QMR";
-            using (OracleConnection conn = new OracleConnection(_configuration["ConnectionStrings:COIN"]))
+            string? sourceDb = appEnvironment == "1" ? "MV_MRB_HIST_PARENT_CHILD_LOTS@SAPHINV" : "MV_MRB_HIST_PARENT_CHILD_LOTS@SAPHINVD_QMR";
+            using (OracleConnection conn = new OracleConnection(coinConnection))
             {
                 conn.Open();
                 try
@@ -257,13 +260,13 @@ namespace QMRv2.Repository.Contracts
             lotNumber = lotNumber.Trim().ToUpper();
             string originLotNumber = lotNumber;
            
-            using (OracleConnection conn = new OracleConnection(_configuration["ConnectionStrings:COIN"]))
+            using (OracleConnection conn = new OracleConnection(coinConnection))
             {
                 try
                 {
                     conn.Open();
                     OracleCommand command;
-                    string? sourceDb = _configuration["AppEnvironment"] == "1" ? "MV_MRB_HIST_PARENT_CHILD_LOTS@SAPHINV" : "MV_MRB_HIST_PARENT_CHILD_LOTS@SAPHINVD_QMR";
+                    string? sourceDb = appEnvironment == "1" ? "MV_MRB_HIST_PARENT_CHILD_LOTS@SAPHINV" : "MV_MRB_HIST_PARENT_CHILD_LOTS@SAPHINVD_QMR";
                     if (lotNumber != "")
                     {
                         List<string> allrelated_lots = new List<string>();
@@ -463,9 +466,9 @@ namespace QMRv2.Repository.Contracts
             try
             {
                 string _parentLot = "";
-                string? sourceDb = _configuration["AppEnvironment"] == "1" ? "MV_MRB_HIST_PARENT_CHILD_LOTS@SAPHINV" : "MV_MRB_HIST_PARENT_CHILD_LOTS@SAPHINVD_QMR";
+                string? sourceDb = appEnvironment == "1" ? "MV_MRB_HIST_PARENT_CHILD_LOTS@SAPHINV" : "MV_MRB_HIST_PARENT_CHILD_LOTS@SAPHINVD_QMR";
 
-                using (OracleConnection conn = new OracleConnection(_configuration["ConnectionStrings:COIN"]))
+                using (OracleConnection conn = new OracleConnection(coinConnection))
                 {
                     conn.Open();
                     string _sql = " select LISTAGG(parent_lot, ', ') WITHIN GROUP(ORDER BY parent_lot)  as Parent_Lot";
@@ -517,7 +520,7 @@ namespace QMRv2.Repository.Contracts
             List<string> retListValue = new List<string>();
             try
             {
-                using (OracleConnection conn = new OracleConnection(_configuration["ConnectionStrings:COIN"]))
+                using (OracleConnection conn = new OracleConnection(coinConnection))
                 {
                     conn.Open();
                     OracleCommand command = new OracleCommand("SELECT LOT_NO FROM MRB_QMRIFX_LOT_REQUESTS WHERE QMRCASENO = '" + caseNo + "' AND TRANSFER_ID = '" + transferID + "' AND IS_PROCESSED = '0' ", conn);
@@ -552,7 +555,7 @@ namespace QMRv2.Repository.Contracts
             string commandString = $"SELECT LOT_NO FROM MRB_QMRIFX_LOT_REQUESTS WHERE QMRCASENO = '{caseNo}' AND LOT_NO = '{lotNo}' AND TRANSFER_ID = '{transferID}' and IS_PROCESSED = 0 ";
             try
             {
-                using (OracleConnection conn = new OracleConnection(_configuration["ConnectionStrings:COIN"]))
+                using (OracleConnection conn = new OracleConnection(coinConnection))
                 {
                     conn.Open();
                     OracleCommand command = new OracleCommand(commandString, conn);
@@ -585,7 +588,7 @@ namespace QMRv2.Repository.Contracts
             List<IfxResult> retListValue = new List<IfxResult>();
             try
             {
-                using (OracleConnection conn = new OracleConnection(_configuration["ConnectionStrings:COIN"]))
+                using (OracleConnection conn = new OracleConnection(coinConnection))
                 {
                     conn.Open();
                     //OracleCommand command = new OracleCommand($"SELECT TRANSFER_ID, QMRCASENO, LOT_NO, ID FROM MRB_QMRIFX_LOT_REQUESTS WHERE TRANSFER_ID IN ( SELECT TRANSFER_ID FROM MRB_QMRIFX_LOT_REQUESTS WHERE IS_PROCESSED = '0' AND IS_SENT = '0' AND BEGIN_TRACING IS NULL ORDER BY EVENT_TIMESTAMP  FETCH FIRST {requestCount} ROWS ONLY ) ORDER BY TRANSFER_ID FETCH FIRST {requestRowsCount} ROWS ONLY", conn);
@@ -629,10 +632,10 @@ namespace QMRv2.Repository.Contracts
             {
                 await Task.Run(() =>
                 {
-                    using (OracleConnection conn = new OracleConnection(_configuration["ConnectionStrings:COIN"]))
+                    using (OracleConnection conn = new OracleConnection(coinConnection))
                     {
                         conn.Open();
-                        var execString = $"SELECT DISTINCT b.TRANSFER_ID, b.CaseNumber  FROM MRB_QMRIFX_LOT_REQUESTS b " +
+                        var execString = $"SELECT DISTINCT b.TRANSFER_ID, b.CaseNumber, b.ID  FROM MRB_QMRIFX_LOT_REQUESTS b " +
                                          $"WHERE b.IS_PROCESSED = '1' AND b.IS_SENT = '0' AND b.BEGIN_TRACING IS NOT NULL AND b.END_TRACING IS NOT NULL";
 
                         OracleCommand command = new OracleCommand(execString, conn);
@@ -644,6 +647,7 @@ namespace QMRv2.Repository.Contracts
                             {
                                 TransferId = reader.IsDBNull(0) ? "" : reader.GetString(0),
                                 CaseNumber = reader.IsDBNull(1) ? "" : reader.GetString(1),
+                                ID = reader.IsDBNull(2) ? "" : reader.GetString(2),
                             };
 
                             retListValue.Add(details);
@@ -671,7 +675,7 @@ namespace QMRv2.Repository.Contracts
             List<LotResultsDetails> retListValue = new List<LotResultsDetails>();
             try
             {
-                using (OracleConnection conn = new OracleConnection(_configuration["ConnectionStrings:COIN"]))
+                using (OracleConnection conn = new OracleConnection(coinConnection))
                 {
                     conn.Open();
                     var execString = $"SELECT * FROM MRB_QMRIFX_LOT_RESULT WHERE MRBCASENO = '{models.CaseNumber}' AND TRANSFER_ID = '{models.TransferId}' AND IS_FOUND IS NULL";
@@ -731,7 +735,7 @@ namespace QMRv2.Repository.Contracts
                                     $"AND LOT_TRACE_ORIGIN = '{model.LotTraceOrigin}' ";
             try
             {
-                using (OracleConnection conn = new OracleConnection(_configuration["ConnectionStrings:COIN"]))
+                using (OracleConnection conn = new OracleConnection(coinConnection))
                 {
                     conn.Open();
                     OracleCommand command = new OracleCommand(commandString, conn);
@@ -763,7 +767,7 @@ namespace QMRv2.Repository.Contracts
         {
 
             var retListValue = new List<IfxResult>();
-            using (OracleConnection conn = new OracleConnection(_configuration["ConnectionStrings:COIN"]))
+            using (OracleConnection conn = new OracleConnection(coinConnection))
             {
                 try
                 {
@@ -811,7 +815,7 @@ namespace QMRv2.Repository.Contracts
             string commandString = $"SELECT COUNT(1) FROM MRB_QMRIFX_LOT_REQUESTS WHERE IS_PROCESSED = '2' AND IS_SENT = '0' AND BEGIN_TRACING IS NOT NULL AND END_TRACING IS NULL";
             try
             {
-                using (OracleConnection conn = new OracleConnection(_configuration["ConnectionStrings:COIN"]))
+                using (OracleConnection conn = new OracleConnection(coinConnection))
                 {
                     conn.Open();
                     OracleCommand command = new OracleCommand(commandString, conn);
@@ -841,7 +845,7 @@ namespace QMRv2.Repository.Contracts
         {
 
             var retListValue = new List<IfxResult>();
-            using (OracleConnection conn = new OracleConnection(_configuration["ConnectionStrings:COIN"]))
+            using (OracleConnection conn = new OracleConnection(coinConnection))
             {
                 try
                 {
@@ -887,7 +891,7 @@ namespace QMRv2.Repository.Contracts
             List<IfxResult> retListValue = new List<IfxResult>();
             try
             {
-                using (OracleConnection conn = new OracleConnection(_configuration["ConnectionStrings:COIN"]))
+                using (OracleConnection conn = new OracleConnection(coinConnection))
                 {
                     conn.Open();
                     OracleCommand command = new OracleCommand($"SELECT TRANSFER_ID, QMRCASENO, LOT_NO, ID FROM MRB_QMRIFX_LOT_REQUESTS WHERE IS_PROCESSED = '0' AND IS_SENT = '0' AND BEGIN_TRACING IS NULL AND END_TRACING IS NULL AND SENT_DATE IS NULL AND USERNAME IS NOT NULL AND USERNAME NOT IN ('SYSTEM') ORDER BY EVENT_TIMESTAMP ASC FETCH FIRST {requestCount} ROWS ONLY ", conn);
@@ -929,7 +933,7 @@ namespace QMRv2.Repository.Contracts
             int response = 0;
             try
             {
-                using (OracleConnection conn = new OracleConnection(_configuration["ConnectionStrings:COIN"]))
+                using (OracleConnection conn = new OracleConnection(coinConnection))
                 {
                     conn.Open();
                     OracleCommand command = new OracleCommand($"SELECT COUNT(*) FROM MRB_QMRIFX_LOT_REQUESTS " +
@@ -969,9 +973,9 @@ namespace QMRv2.Repository.Contracts
             try
             {
                 bool res = false;
-                string tableName = _configuration["AppEnvironment"] == "1" ? "MV_MRB_HIST_PARENT_CHILD_LOTS@SAPHINV" : "MV_MRB_HIST_PARENT_CHILD_LOTS@SAPHINVD_QMR";
+                string tableName = appEnvironment == "1" ? "MV_MRB_HIST_PARENT_CHILD_LOTS@SAPHINV" : "MV_MRB_HIST_PARENT_CHILD_LOTS@SAPHINVD_QMR";
 
-                using (OracleConnection conn = new OracleConnection(_configuration["ConnectionStrings:COIN"]))
+                using (OracleConnection conn = new OracleConnection(coinConnection))
                 {
                     conn.Open();
                     OracleCommand command4 = new OracleCommand("select * from " + tableName + " where parent_lot = '" + lot + "' or child_lot = '" + lot + "'", conn);
@@ -987,7 +991,7 @@ namespace QMRv2.Repository.Contracts
 
                 if (!res)
                 {
-                    using (IngresConnection conn = new IngresConnection(_configuration["ConnectionStrings:Ingres1"]))
+                    using (IngresConnection conn = new IngresConnection(_configuration["ConnectionStrings:INGBE"]))
                     {
                         conn.Open();
                         IngresCommand command4 = new IngresCommand("select * from mis.mfginv where concat(lot, split) like '%" + lot + "%'", conn);
@@ -1068,7 +1072,7 @@ namespace QMRv2.Repository.Contracts
         {
             string resPlValue = "";
 
-            using (OracleConnection conn = new OracleConnection(_configuration["ConnectionStrings:COIN"]))
+            using (OracleConnection conn = new OracleConnection(coinConnection))
             {
                 conn.Open();
 

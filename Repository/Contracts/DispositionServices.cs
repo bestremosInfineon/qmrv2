@@ -23,6 +23,12 @@ namespace QMRv2.Repository.Contracts
             _actionServices = actionServices;
         }
 
+        public string INGBE => Environment.GetEnvironmentVariable("INGBE") ?? _configuration["ConnectionStrings:INGBE"];
+        public string INGCSPIMIS => Environment.GetEnvironmentVariable("INGCSPIMIS") ?? _configuration["ConnectionStrings:INGCSPIMIS"];
+        public string CSPMARK => Environment.GetEnvironmentVariable("CSPMARK") ?? _configuration["ConnectionStrings:CSPMARK"];
+        public string CSPMFG => Environment.GetEnvironmentVariable("CSPMFG") ?? _configuration["ConnectionStrings:CSPMFG"];
+        public string blockToggle => Environment.GetEnvironmentVariable("BlockingDispoToggle") ?? _configuration["BlockingDispoToggle"];
+
         public async Task<string> InsertDispositionRequests(LotRequest query)
         {
             try
@@ -194,8 +200,12 @@ namespace QMRv2.Repository.Contracts
             }
 
             var procName = (dispoProd.Contains(model.Disposition.ToUpper()) ? "setDispoToProd" : "setDispoToNonProd");
-            bool toggle = Convert.ToBoolean(_configuration["BlockingDispoToggle"]);
-            var connString = toggle ? _configuration["Ingres1"] : _configuration["Ingres2"];
+            bool toggle = Convert.ToBoolean(blockToggle);
+            var connString = toggle ? INGBE : INGCSPIMIS;
+            model.DispositionMap = dispo;
+            model.SPName = procName;
+            model.Toggle = toggle;
+
             using (IngresConnection connIngres = new IngresConnection(connString))
             {
                 connIngres.Open();
@@ -210,6 +220,9 @@ namespace QMRv2.Repository.Contracts
                     cmd.ExecuteNonQuery();
                     trans.Commit();
                     connIngres.Close();
+
+                    await ExecuteDispoCspMark(model);
+                    await ExecuteDispoCspMfg(model);
 
                     return false;
                 }
@@ -303,6 +316,74 @@ namespace QMRv2.Repository.Contracts
                 };
                 await _logsServices.InsertTblDebugger(debug);
                 return await Task.FromResult(false);
+            }
+        }
+
+        public async Task ExecuteDispoCspMark(IfxBlockResult model)
+        {
+            var connString = model.Toggle ? CSPMARK : INGCSPIMIS;
+            using (IngresConnection connIngres = new IngresConnection(connString))
+            {
+                connIngres.Open();
+                IngresTransaction trans = connIngres.BeginTransaction(IsolationLevel.ReadCommitted);
+                try
+                {
+                    // setDispoToNonProd (pMRBcaseno VARCHAR(20), pLot INTEGER, pSplit VARCHAR(5), pOriginator VARCHAR(30), pOwner VARCHAR(30), pDisposition VARCHAR(100))
+                    // setDispoToProd (pMRBcaseno VARCHAR(20), pLot INTEGER, pSplit VARCHAR(5), pOriginator VARCHAR(30), pOwner VARCHAR(30), pDisposition VARCHAR(100))
+                    string query = $"EXECUTE PROCEDURE {model.SPName} ('{model.CaseNumber}', {model.LotNumber}, '{model.Split}', '{model.CaseManager}', '{model.CaseManager}', '{model.DispositionMap}', '{DateTime.Now.AddHours(-8).ToString("dd-MMM-yy HH:mm:ss").ToUpper()}')";
+                    IngresCommand cmd = new IngresCommand(query, connIngres);
+                    cmd.Transaction = trans;
+                    cmd.ExecuteNonQuery();
+                    trans.Commit();
+                    connIngres.Close();
+                }
+                catch (Exception err)
+                {
+                    var debug = new TblDebugger
+                    {
+                        Var1 = "DispositionService_007",
+                        Var2 = $"TRANSFERID #{model.TransferID} CASE #{model.CaseNumber} LOT #{model.LotNumber}",
+                        Var4 = err
+                    };
+                    await _logsServices.InsertTblDebugger(debug);
+
+                    trans.Rollback();
+                    connIngres.Close();
+                }
+            }
+        }
+
+        public async Task ExecuteDispoCspMfg(IfxBlockResult model)
+        {
+            var connString = model.Toggle ? CSPMFG : INGCSPIMIS;
+            using (IngresConnection connIngres = new IngresConnection(connString))
+            {
+                connIngres.Open();
+                IngresTransaction trans = connIngres.BeginTransaction(IsolationLevel.ReadCommitted);
+                try
+                {
+                    // setDispoToNonProd (pMRBcaseno VARCHAR(20), pLot INTEGER, pSplit VARCHAR(5), pOriginator VARCHAR(30), pOwner VARCHAR(30), pDisposition VARCHAR(100))
+                    // setDispoToProd (pMRBcaseno VARCHAR(20), pLot INTEGER, pSplit VARCHAR(5), pOriginator VARCHAR(30), pOwner VARCHAR(30), pDisposition VARCHAR(100))
+                    string query = $"EXECUTE PROCEDURE {model.SPName} ('{model.CaseNumber}', {model.LotNumber}, '{model.Split}', '{model.CaseManager}', '{model.CaseManager}', '{model.DispositionMap}', '{DateTime.Now.AddHours(-8).ToString("dd-MMM-yy HH:mm:ss").ToUpper()}')";
+                    IngresCommand cmd = new IngresCommand(query, connIngres);
+                    cmd.Transaction = trans;
+                    cmd.ExecuteNonQuery();
+                    trans.Commit();
+                    connIngres.Close();
+                }
+                catch (Exception err)
+                {
+                    var debug = new TblDebugger
+                    {
+                        Var1 = "DispositionService_008",
+                        Var2 = $"TRANSFERID #{model.TransferID} CASE #{model.CaseNumber} LOT #{model.LotNumber}",
+                        Var4 = err
+                    };
+                    await _logsServices.InsertTblDebugger(debug);
+
+                    trans.Rollback();
+                    connIngres.Close();
+                }
             }
         }
     }

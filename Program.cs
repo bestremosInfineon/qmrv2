@@ -20,7 +20,7 @@ builder.Services.AddScoped<IActionServices, ActionServices>();
 builder.Services.AddScoped<IIngresServices, IngresServices>();
 
 builder.Configuration.AddJsonFile("appsettings.json");
-builder.Services.AddDbContext<AppDBContext>(options => options.UseOracle(builder.Configuration.GetConnectionString("COIN")));
+builder.Services.AddDbContext<AppDBContext>(options => options.UseOracle(Environment.GetEnvironmentVariable("COIN") ?? builder.Configuration.GetConnectionString("COIN")));
 
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen(c =>
@@ -37,15 +37,12 @@ builder.Services.AddSwaggerGen(c =>
 var app = builder.Build();
 
 // Configure the HTTP request pipeline.
-if (app.Environment.IsDevelopment())
+app.UseSwagger();
+app.UseSwaggerUI(c =>
 {
-    app.UseSwagger();
-    app.UseSwaggerUI(c =>
-    {
-        c.SwaggerEndpoint("/swagger/v1/swagger.json", "Your API v1");
-    });
+    c.SwaggerEndpoint("/swagger/v1/swagger.json", "Your API v1");
+});
 
-}
 
 app.UseHttpsRedirection();
 

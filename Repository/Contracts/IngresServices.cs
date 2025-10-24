@@ -24,8 +24,8 @@ namespace QMRv2.Repository.Contracts
             var response = new List<CaseInfo>();
             try
             {
-                int maxRetries = 30;
-                int retryDelayMs = 500;
+                int maxRetries = int.Parse(Environment.GetEnvironmentVariable("RetryLimit") ?? _configuration["RetryLimit"]);
+                int retryDelayMs = int.Parse(Environment.GetEnvironmentVariable("DelayLimit") ?? _configuration["DelayLimit"]);
 
                 for (int i = 0; i < maxRetries; i++)
                 {
@@ -68,7 +68,7 @@ namespace QMRv2.Repository.Contracts
             {
                 string[] lotlistIngres = model.LotNumber.Replace("'", string.Empty).Split(',');
                 var response = new List<CaseInfo>();
-                using (IngresConnection connIngres = new IngresConnection(_configuration["ConnectionStrings:Ingres"]))
+                using (IngresConnection connIngres = new IngresConnection(Environment.GetEnvironmentVariable("INGRES") ?? _configuration["ConnectionStrings:INGRES"]))
                 {
                     connIngres.Open();
                     IngresTransaction trans = connIngres.BeginTransaction(IsolationLevel.ReadCommitted);

@@ -17,13 +17,16 @@ namespace QMRv2.Repository.Contracts
             _logsServices = logsServices;
         }
 
+
+        public string connectionString => Environment.GetEnvironmentVariable("COIN") ?? _configuration["ConnectionStrings:COIN"];
+
         public async Task<bool> InsertResults(LotResultsDetails item, string caseNumber, string transferID)
         {
             try
             {
                 if (item != null)
                 {
-                    using (OracleConnection conn = new OracleConnection(_configuration["ConnectionStrings:COIN"]))
+                    using (OracleConnection conn = new OracleConnection(connectionString))
                     {
                         conn.Open();
                         OracleCommand cmd = new OracleCommand
@@ -83,7 +86,7 @@ namespace QMRv2.Repository.Contracts
                                 $"WHERE TRANSFER_ID IN ({transferId}) " +
                                 $"AND QMRCASENO IN ({Case}) " +
                                 $"AND LOT_NO IN ({lotNumber})";
-            using (OracleConnection conn = new OracleConnection(_configuration["ConnectionStrings:COIN"]))
+            using (OracleConnection conn = new OracleConnection(connectionString))
             {
                 conn.Open();
                 OracleTransaction trans = conn.BeginTransaction(IsolationLevel.ReadCommitted);
@@ -117,7 +120,7 @@ namespace QMRv2.Repository.Contracts
                                 $"WHERE TRANSFER_ID IN ({transferId}) " +
                                 $"AND QMRCASENO IN ({Case}) " +
                                 $"AND LOT_NO IN ({lotNumber})";
-            using (OracleConnection conn = new OracleConnection(_configuration["ConnectionStrings:COIN"]))
+            using (OracleConnection conn = new OracleConnection(connectionString))
             {
                 conn.Open();
                 OracleTransaction trans = conn.BeginTransaction(IsolationLevel.ReadCommitted);
@@ -148,7 +151,7 @@ namespace QMRv2.Repository.Contracts
         public async Task<int> InsertRequestTrace(IfxResult data)
         {
             var retValue = 0;
-            using (OracleConnection conn = new OracleConnection(_configuration["ConnectionStrings:COIN"]))
+            using (OracleConnection conn = new OracleConnection(connectionString))
             {
                 try
                 {
@@ -183,7 +186,7 @@ namespace QMRv2.Repository.Contracts
 
         public async Task<int> InsertRequestBlock(IfxBlockResult data)
         {
-            using (OracleConnection conn = new OracleConnection(_configuration["ConnectionStrings:COIN"]))
+            using (OracleConnection conn = new OracleConnection(connectionString))
             {
                 var retValue = 0;
                 try
@@ -224,7 +227,7 @@ namespace QMRv2.Repository.Contracts
         public async Task<int> InsertRequestDispo(IfxBlockResult data)
         {
             var retValue = 0;
-            using (OracleConnection conn = new OracleConnection(_configuration["ConnectionStrings:COIN"]))
+            using (OracleConnection conn = new OracleConnection(connectionString))
             {
                 try
                 {
@@ -265,7 +268,7 @@ namespace QMRv2.Repository.Contracts
                                  $"AND TRANSFER_ID = '{models.TransferId}' " +
                                  $"AND LOT_NO = '{models.LotNumber}'";
 
-            using (OracleConnection conn = new OracleConnection(_configuration["ConnectionStrings:COIN"]))
+            using (OracleConnection conn = new OracleConnection(connectionString))
             {
                 conn.Open();
                 OracleTransaction trans = conn.BeginTransaction(IsolationLevel.ReadCommitted);
@@ -302,7 +305,7 @@ namespace QMRv2.Repository.Contracts
                                  $"WHERE QMRCASENO = '{models.CaseNumber}' " +
                                  $"AND TRANSFER_ID = '{models.TransferId}' ";
 
-            using (OracleConnection conn = new OracleConnection(_configuration["ConnectionStrings:COIN"]))
+            using (OracleConnection conn = new OracleConnection(connectionString))
             {
                 conn.Open();
                 OracleTransaction trans = conn.BeginTransaction(IsolationLevel.ReadCommitted);
@@ -340,7 +343,7 @@ namespace QMRv2.Repository.Contracts
                                  $"AND LOT_NO = '{model.LotNumber}' " +
                                  $"AND TRANSFER_ID = '{model.TransferId}'";
 
-            using (OracleConnection conn = new OracleConnection(_configuration["ConnectionStrings:COIN"]))
+            using (OracleConnection conn = new OracleConnection(connectionString))
             {
                 conn.Open();
                 OracleTransaction trans = conn.BeginTransaction(IsolationLevel.ReadCommitted);
@@ -373,7 +376,7 @@ namespace QMRv2.Repository.Contracts
 
         public async Task UpdateBeginTracing(ActionModel model)
         {
-            using (OracleConnection connDebug = new OracleConnection(_configuration["ConnectionStrings:COIN"]))
+            using (OracleConnection connDebug = new OracleConnection(connectionString))
             {
                 try
                 {
@@ -403,7 +406,7 @@ namespace QMRv2.Repository.Contracts
 
         public async Task UpdateEndTracing(ActionModel model)
         {
-            using (OracleConnection connDebug = new OracleConnection(_configuration["ConnectionStrings:COIN"]))
+            using (OracleConnection connDebug = new OracleConnection(connectionString))
             {
                 try
                 {
@@ -438,7 +441,7 @@ namespace QMRv2.Repository.Contracts
                                  $"AND TRANSFER_ID = '{model.TransferId}' " +
                                  $"AND LOT_NO = '{model.LotNumber}'";
 
-            using (OracleConnection conn = new OracleConnection(_configuration["ConnectionStrings:COIN"]))
+            using (OracleConnection conn = new OracleConnection(connectionString))
             {
                 conn.Open();
                 OracleTransaction trans = conn.BeginTransaction(IsolationLevel.ReadCommitted);
@@ -475,7 +478,7 @@ namespace QMRv2.Repository.Contracts
                      $"WHERE QMRCASENO = '{model.CaseNumber}' AND TRANSFER_ID = '{model.TransferId}' " +
                      $"AND ID = '{details.ID}' AND LOT_TRACE_ORIGIN = '{details.LotTraceOrigin}' AND (LOT_NO||SPLIT_NO = '{details.LotNumber}' OR LOT_NO = '{details.LotNumber}') ";
 
-            using (OracleConnection conn = new OracleConnection(_configuration["ConnectionStrings:COIN"]))
+            using (OracleConnection conn = new OracleConnection(connectionString))
             {
                 conn.Open();
                 OracleTransaction trans = conn.BeginTransaction(IsolationLevel.ReadCommitted);
@@ -513,7 +516,7 @@ namespace QMRv2.Repository.Contracts
                                  $"AND TRANSFER_ID = '{model.TransferId}'" +
                                  $"AND IS_PROCESSED = '2' AND IS_SENT = '0'";
 
-            using (OracleConnection conn = new OracleConnection(_configuration["ConnectionStrings:COIN"]))
+            using (OracleConnection conn = new OracleConnection(connectionString))
             {
                 conn.Open();
                 OracleTransaction trans = conn.BeginTransaction(IsolationLevel.ReadCommitted);
@@ -549,7 +552,7 @@ namespace QMRv2.Repository.Contracts
             string updateString = $"UPDATE MRB_QMRIFX_LOT_REQUESTS SET IS_PROCESSED = '0',  IS_SENT = '0', BEGIN_TRACING = NULL, END_TRACING = NULL, SENT_DATE = NULL " +
                                  $"WHERE TRANSFER_ID = '{model.TransferId}' AND QMRCASENO = '{model.CaseNumber}' AND LOT_NO = '{model.LotNumber}' ";
 
-            using (OracleConnection conn = new OracleConnection(_configuration["ConnectionStrings:COIN"]))
+            using (OracleConnection conn = new OracleConnection(connectionString))
             {
                 conn.Open();
                 OracleTransaction trans = conn.BeginTransaction(IsolationLevel.ReadCommitted);
@@ -585,7 +588,7 @@ namespace QMRv2.Repository.Contracts
             string updateString = $"UPDATE MRB_QMRIFX_LOT_REQUESTS SET IS_PROCESSED = '1'" +
                                  $"WHERE TRANSFER_ID = '{model.TransferId}' AND QMRCASENO = '{model.CaseNumber}' AND LOT_NO = '{model.LotNumber}'";
 
-            using (OracleConnection conn = new OracleConnection(_configuration["ConnectionStrings:COIN"]))
+            using (OracleConnection conn = new OracleConnection(connectionString))
             {
                 conn.Open();
                 OracleTransaction trans = conn.BeginTransaction(IsolationLevel.ReadCommitted);
@@ -623,7 +626,7 @@ namespace QMRv2.Repository.Contracts
                                  $"AND LOT_NO = '{model.LotNumber}' " +
                                  $"AND TRANSFER_ID = '{model.TransferId}'";
 
-            using (OracleConnection conn = new OracleConnection(_configuration["ConnectionStrings:COIN"]))
+            using (OracleConnection conn = new OracleConnection(connectionString))
             {
                 conn.Open();
                 OracleTransaction trans = conn.BeginTransaction(IsolationLevel.ReadCommitted);
@@ -661,7 +664,7 @@ namespace QMRv2.Repository.Contracts
                                  $"AND TRANSFER_ID = '{model.TransferId}' " +
                                  $"AND LOT_NO = '{model.LotNumber}' ";
 
-            using (OracleConnection conn = new OracleConnection(_configuration["ConnectionStrings:COIN"]))
+            using (OracleConnection conn = new OracleConnection(connectionString))
             {
                 conn.Open();
                 OracleTransaction trans = conn.BeginTransaction(IsolationLevel.ReadCommitted);
@@ -692,5 +695,6 @@ namespace QMRv2.Repository.Contracts
                 }
             }
         }
+
     }
 }
